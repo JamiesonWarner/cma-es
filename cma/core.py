@@ -134,10 +134,10 @@ class CMA(object):
         # Non-trainable parameters
         # -------------------------
         # Solution dimension
-        self.N = tf.constant(self.dimension, dtype=tf.float64)
+        self.N = tf.constant(self.dimension, dtype=tf.float32)
         # Population size
         if self.population_size is not None:
-            self.λ = tf.constant(self.population_size, dtype=tf.float64)
+            self.λ = tf.constant(self.population_size, dtype=tf.float32)
         else:
             self.λ = tf.floor(tf.math.log(self.N) * 3 + 8)
         # Shape of the population of solutions
@@ -147,7 +147,7 @@ class CMA(object):
         # Recombination weights
         self.weights = tf.concat([
             tf.math.log(self.μ + 0.5) - tf.math.log(tf.range(1, self.μ + 1)),
-            tf.zeros(shape=(self.λ - self.μ,), dtype=tf.float64),
+            tf.zeros(shape=(self.λ - self.μ,), dtype=tf.float32),
         ], axis=0)
         # Normalize weights such as they sum to one and reshape into a column matrix
         self.weights = (self.weights / tf.reduce_sum(self.weights))[:, tf.newaxis]
@@ -155,27 +155,27 @@ class CMA(object):
         self.μeff = tf.reduce_sum(self.weights) ** 2 / tf.reduce_sum(self.weights ** 2)
         # Time constant for cumulation for C
         if self._cc is not None:
-            self.cc = tf.constant(self._cc, dtype=tf.float64)
+            self.cc = tf.constant(self._cc, dtype=tf.float32)
         else:
             self.cc = (4 + self.μeff / self.N) / (self.N + 4 + 2 * self.μeff / self.N)
         # Time constant for cumulation for sigma control
         if self._cσ is not None:
-            self.cσ = tf.constant(self._cσ, dtype=tf.float64)
+            self.cσ = tf.constant(self._cσ, dtype=tf.float32)
         else:
             self.cσ = (self.μeff + 2) / (self.N + self.μeff + 5)
         # Learning rate for rank-one update of C
         if self._c1 is not None:
-            self.c1 = tf.constant(self._c1, dtype=tf.float64)
+            self.c1 = tf.constant(self._c1, dtype=tf.float32)
         else:
             self.c1 = 2 / ((self.N + 1.3)**2 + self.μeff)
         # Learning rate for rank-μ update of C
         if self._cμ is not None:
-            self.cμ = tf.constant(self._cμ, dtype=tf.float64)
+            self.cμ = tf.constant(self._cμ, dtype=tf.float32)
         else:
             self.cμ = 2 * (self.μeff - 2 + 1 / self.μeff) / ((self.N + 2)**2 + 2 * self.μeff / 2)
         # Damping for sigma
         if self._damps is not None:
-            self.damps = tf.constant(self._damps, dtype=tf.float64)
+            self.damps = tf.constant(self._damps, dtype=tf.float32)
         else:
             self.damps = (
                 1 + 2 * tf.maximum(0, tf.sqrt((self.μeff - 1) / (self.N + 1)) - 1) + self.cσ
@@ -185,7 +185,7 @@ class CMA(object):
 
         # Define bounds in a format that can be fed to tf.clip_by_value
         if self._enforce_bounds:
-            bounds = tf.convert_to_tensor(self.enforce_bounds, dtype=tf.float64)
+            bounds = tf.convert_to_tensor(self.enforce_bounds, dtype=tf.float32)
             self.clip_value_min = bounds[:, 0]
             self.clip_value_max = bounds[:, 1]
 
@@ -193,19 +193,19 @@ class CMA(object):
         # Trainable parameters
         # ---------------------
         # Mean
-        self.m = tf.Variable(tf.constant(self.initial_solution, dtype=tf.float64))
+        self.m = tf.Variable(tf.constant(self.initial_solution, dtype=tf.float32))
         # Step-size
-        self.σ = tf.Variable(tf.constant(self.initial_step_size, dtype=tf.float64))
+        self.σ = tf.Variable(tf.constant(self.initial_step_size, dtype=tf.float32))
         # Covariance matrix
-        self.C = tf.Variable(tf.eye(num_rows=self.N, dtype=tf.float64))
+        self.C = tf.Variable(tf.eye(num_rows=self.N, dtype=tf.float32))
         # Evolution path for σ
-        self.p_σ = tf.Variable(tf.zeros((self.N,), dtype=tf.float64))
+        self.p_σ = tf.Variable(tf.zeros((self.N,), dtype=tf.float32))
         # Evolution path for C
-        self.p_C = tf.Variable(tf.zeros((self.N,), dtype=tf.float64))
+        self.p_C = tf.Variable(tf.zeros((self.N,), dtype=tf.float32))
         # Coordinate system (normalized eigenvectors)
-        self.B = tf.Variable(tf.eye(num_rows=self.N, dtype=tf.float64))
+        self.B = tf.Variable(tf.eye(num_rows=self.N, dtype=tf.float32))
         # Scaling (square root of eigenvalues)
-        self.D = tf.Variable(tf.eye(num_rows=self.N, dtype=tf.float64))
+        self.D = tf.Variable(tf.eye(num_rows=self.N, dtype=tf.float32))
 
         self._initialized = True
         return self
@@ -233,7 +233,7 @@ class CMA(object):
             # -----------------------------------------------------
             # (1) Sample a new population of solutions ∼ N(m, σ²C)
             # -----------------------------------------------------
-            z = tf.random.normal(self.shape, dtype=tf.float64)   # ∼ N(0, I)
+            z = tf.random.normal(self.shape, dtype=tf.float32)   # ∼ N(0, I)
             y = tf.matmul(z, tf.matmul(self.B, self.D))          # ∼ N(0, C)
             x = self.m + self.σ * y                              # ∼ N(m, σ²C)
 

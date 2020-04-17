@@ -134,7 +134,7 @@ class TestCMA(unittest.TestCase):
             Schwefel Function
             https://www.sfu.ca/~ssurjano/schwef.html
             """
-            dimension = tf.cast(tf.shape(x)[1], tf.float64)
+            dimension = tf.cast(tf.shape(x)[1], tf.float32)
             return 418.9829 * dimension - tf.reduce_sum(x * tf.sin(tf.sqrt(tf.abs(x))), axis=1)
 
         cma = CMA(
